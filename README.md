@@ -6,7 +6,9 @@ The processed dataset is too large to store in github so we are storing it in a 
 [SW96_CSDM.zip](https://drexel0-my.sharepoint.com/:u:/g/personal/nh585_drexel_edu/EetAsTAddv1NkG7vvt8LyzMBzpbld3eytqdwNIMFJz6APA?e=4pYVsr) 
 
 Please download it and uncompress it and add it to the same folder as your **PassiveSonarUnderWaterDetection** cloned repo or forked branch lives locally. 
-##Getting Started
+
+
+## Getting Started
 
 First install the requirements needed for this project (NOTE: The SW96_CSDM.zip is needed as well please download and uncompross to local git repo)
 Make sure to run from the **PassiveSonarUnderWaterDetection** folder: 
