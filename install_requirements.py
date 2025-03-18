@@ -1,3 +1,9 @@
+#-----------------------------------------------------
+# Deep Learning Final Project 2025
+# Under Water Passive Acoustic Source Localization
+# Author: Nick Hubchak
+# All Rights Reserved 2025-2030
+#----------------------------------------------------
 import subprocess
 import sys
 
