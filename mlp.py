@@ -58,7 +58,7 @@ def accuracy(Y, Yhat):
 #             end = min(start + batch_size, num_samples)
 #             yield X[start:end], Y[start:end]
 
-def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epochs=100000, tol=1e-10, batch_size=64):
+def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epochs=100000, tol=1e-6, batch_size=64):
     input_dim = X_train.shape[1]
     output_dim =  1
     Y_train = Y_train.reshape(-1, 1) #force to be (3000, 1)
