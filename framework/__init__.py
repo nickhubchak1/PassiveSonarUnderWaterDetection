@@ -13,3 +13,4 @@ from .TanhLayer import TanhLayer
 from .SquaredError import SquaredError
 from .LogLoss import LogLoss
 from .CrossEntropy import CrossEntropy
+from .AddLayer import AddLayer

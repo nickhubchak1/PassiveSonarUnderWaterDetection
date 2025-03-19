@@ -54,7 +54,22 @@ MLP Shallow Training VS Validation w.r.t. Epochs             |  MLP Shallow Trai
 :-------------------------:|:-------------------------:
 ![MLP Shallow Training VS Validation w.r.t. Epochs](Graphs/MLP_Shallow_training_vs_validation.png)  |  ![MLP Shallow Training VS Validation w.r.t. Epochs Zoomed in](Graphs/MLP_Shallow_training_vs_validation_Zoomed.png)
 
-
-
-
 We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **Validation Loss = 5.7398328336, SMAPE = 0.2900421048, RMSE = 0.0618592372**
+
+Running the mlp with a skip residual : 
+
+```bash
+python mlp_skip.py
+```
+
+We can see even better outputs in the following graph. The second graph is an image of how training vs validation performs for the shallow mlp (Same framework as the one above) including a skip risidual where we skip most of the hidden layers in a branch and then fuse the two processing branches, right side is the same thing just zoomed in:
+
+One important thing to note with skip residuals in this example is convergance happens much sooner before we would get convergance on epoch 1100  but now with skip residuals we converge around epoch 696
+
+MLP Shallow w. Skip Residual Training VS Validation w.r.t. Epochs             |  MLP Shallow w. Skip Residual Training VS Validation w.r.t. Epochs Zoomed in
+:-------------------------:|:-------------------------:
+![MLP Shallow with Skip Training VS Validation w.r.t. Epochs](Graphs/MLP_Shallow_with_Skip_training_vs_validation.png)  |  ![MLP Shallow with skip Training VS Validation w.r.t. Epochs Zoomed in](Graphs/MLP_Shallow_with_Skip_training_vs_validation_Zoomed.png)
+
+We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **Validation Loss = 5.7540781178, SMAPE = 0.2991907063, RMSE = 0.0619359514**
+
+
