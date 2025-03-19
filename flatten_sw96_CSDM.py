@@ -8,7 +8,6 @@ import numpy as np
 import json
 import h5py
 
-
 def pca_numpy(X, num_components):
     """
     Perform PCA on dataset X using NumPy.
@@ -40,7 +39,6 @@ def pca_numpy(X, num_components):
     print(f"Variance retained: {explained_variance * 100:.2f}%")
     return X_reduced, explained_variance
 
-
 def pca_svd(X, num_components):
     """
     Perform PCA using Singular Value Decomposition (SVD), avoiding large covariance matrices.
@@ -71,7 +69,6 @@ if __name__ == "__main__":
     with open('sw96_CSDM/feature_metadata.json', 'r') as f:
         metadata = json.load(f)
 
-
     feature_shape = metadata["shape"]
     feature_dtype = np.complex128  
 
@@ -94,41 +91,57 @@ if __name__ == "__main__":
     print("Frequencies shape:", frequencies.shape)
     print("Labels shape:", labels.shape)
 
-
-
     n_samples = features.shape[0]
     n_features = np.prod(features.shape[1:])  
 
-
     features_flattened = features.reshape(n_samples, n_features)
-
 
     features_normalized = np.abs(features_flattened) 
     features_normalized = features_normalized / np.max(features_normalized)
 
-
-    #Used this to create flattened_data.npz
+    #Used this to create flattened_data.npz, not as good as h5
     #np.savez_compressed('flattened_data.npz', features=features_normalized, labels=labels)
 
 
+    # Save the flattened features and labels to an HDF5 file, checkpoint for data before splitting
+    with h5py.File('flattened_data.h5', 'w') as f:
+        f.create_dataset('features', data=features_normalized)
+        f.create_dataset('labels', data=labels)
+
+    #Continuation of setting up training and validation    
     loaded_features = features_normalized.astype(np.float32)  # used to be 64 but too large to process
     loaded_labels = labels.astype(np.float32) #needs to be 32 because anything less wont be supported by svd
 
-
-
     print("Before PCA data shape:", loaded_features.shape)
     print("Before PCA Y_hat shape:", loaded_labels.shape)
-    # Example Usage
+
+    #Shuffle
+    subset_size = int(len(loaded_features) * 1)  # 100% of the data can use 0.1 for 10%
+    indices = np.random.choice(len(loaded_features), size=subset_size, replace=False)
+    loaded_features = loaded_features[indices]
+    loaded_labels = loaded_labels[indices]
+
+    # Split the dataset into 1/3 for training and 2/3 for validation
+    split_index = len(loaded_features) // 3
+    X_train, X_val = loaded_features[split_index:], loaded_features[:split_index]
+    Y_train, Y_val = loaded_labels[split_index:], loaded_labels[:split_index]
+
+    print("Before PCA Training data shape:", X_train.shape)
+    print("Before PCA Validation data shape:", X_val.shape)
+    print("Y_train: ", Y_train[:50])
+
     num_components = 1256 #512 is stable
-    loaded_features_reduced, variance_retained = pca_svd(loaded_features, num_components)
+    X_train_reduced, variance_retained = pca_svd(X_train, num_components)
+    X_val_reduced, _ = pca_svd(X_val, num_components)
 
     print(f"Variance retained: {variance_retained * 100:.2f}%")
 
-    print("features data shape after reduction:", loaded_features_reduced.shape)
-    print("Y_hat data shape unchanged:", loaded_labels.shape)
+    print("Training data shape after reduction:", X_train_reduced.shape)
+    print("Validation data shape after reduction:", X_val_reduced.shape)
 
-
-# Save the flattened features and labels to an HDF5 file
-with h5py.File('flattened_data.h5', 'w') as f:
-    f.create_dataset('features', data=loaded_features_reduced)
-    f.create_dataset('labels', data=labels)
+    # Save the flattened features and labels to an HDF5 file
+    with h5py.File('Training_and_Validation.h5', 'w') as f:
+        f.create_dataset('xTrainReduced', data=X_train_reduced)
+        f.create_dataset('yTrain', data=Y_train)
+        f.create_dataset('xValidationReduced', data=X_val_reduced)
+        f.create_dataset('yValidation', data=Y_val)

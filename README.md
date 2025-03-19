@@ -8,6 +8,7 @@ The processed dataset is too large to store in github so we are storing it in a 
 Please download it and uncompress it and add it to the same folder as your **PassiveSonarUnderWaterDetection** cloned repo or forked branch lives locally. 
 
 
+
 ## Getting Started
 
 First install the requirements needed for this project (NOTE: The SW96_CSDM.zip is needed as well please download and uncompross to local git repo)
@@ -24,6 +25,10 @@ python flatten_sw96_CSDM.py
 ```
 
 You should now see a flattened_data.h5 in your local repo folder. If not check terminal for errors and try again.
+
+You should also see **Training_and_Validation.h5 which is our refined and preprocessed dataset after PCA to reduce the large feature set.
+
+So the dataset goes from roughly 300,000 features -> 1256 features with a varience retention of about 99% 
 
 Now we are ready to train ! Go ahead and run the mlp.py (This is just a basic MLP with shallow layers)
 
