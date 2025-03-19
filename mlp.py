@@ -128,24 +128,14 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max
     return train_mse, val_mse
 
 def plot_mse(train_mse, val_mse):
-    plt.plot(train_mse, label="Training Log Loss")
-    plt.plot(val_mse, label="Validation Log Loss")
+    plt.plot(train_mse, label="Train Squared Error")
+    plt.plot(val_mse, label="Validation Squared Error")
     plt.xlabel("Epoch")
     plt.ylabel("Squared Error")
     plt.title("Squared Error vs Epoch")
     plt.legend()
     plt.show()
     
-def plot_mse_optimized(train_mse, val_mse):
-    plt.plot(train_mse, label="Training Log Loss")
-    plt.plot(val_mse, label="Validation Log Loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("Squared Error")
-    plt.title("Squared Error vs Epoch optimized")
-    plt.legend()
-    plt.show()
-    
-
 if __name__ == "__main__":
 
     with h5py.File('Training_and_Validation.h5', 'r') as f:
