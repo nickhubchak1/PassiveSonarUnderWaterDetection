@@ -49,8 +49,12 @@ Please note: runtimes may vary and some take longer to run, we added special opt
 ## Some Results
 
 The first graph is an image of how the training vs validation performs for the shallow mlp with NO skip risiduals, right side is just zoomed in:
-![MLP Shallow Training VS Validation w.r.t. Epochs](Graphs/MLP_Shallow_training_vs_validation.png)
-![MLP Shallow Training VS Validation w.r.t. Epochs Zoomed in](Graphs/MLP_Shallow_training_vs_validation_Zoomed.png)
+
+MLP Shallow Training VS Validation w.r.t. Epochs             |  MLP Shallow Training VS Validation w.r.t. Epochs Zoomed in
+:-------------------------:|:-------------------------:
+![MLP Shallow Training VS Validation w.r.t. Epochs](Graphs/MLP_Shallow_training_vs_validation.png)  |  ![MLP Shallow Training VS Validation w.r.t. Epochs Zoomed in](Graphs/MLP_Shallow_training_vs_validation_Zoomed.png)
+
+
 
 
 We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **Validation Loss = 5.7398328336, SMAPE = 0.2900421048, RMSE = 0.0618592372**
