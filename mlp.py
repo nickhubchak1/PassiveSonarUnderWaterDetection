@@ -48,87 +48,15 @@ def accuracy(Y, Yhat):
     return np.mean(predictions == Y)
 
 
-def train_optimized(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epochs=100000, tol=1e-10):
-    input_dim = X_train.shape[1]
-    output_dim =  1 #Y_train.shape[1]
-    #print("input_dim:, ", X_train.shape[1])
-    #print("output_dim: ", output_dim)
-    L1 = InputLayer(X_train)
-    L2 = FullyConnectedLayer(input_dim, input_dim)
-    L3 = TanhLayer()
-    L4 = FullyConnectedLayer(input_dim, output_dim) # since the tanh layer produces an output of x by 1
-    L5 = LogisticSigmoidLayer()
-    L6 = LogLoss()
-    layers = [L1, L2, L3, L4, L5, L6]
-    train_mse, val_mse = [], []
-    Y_hat = []
-    tic = time.perf_counter()  # Start timer
-    prev_mse = float('inf')
-    
-    for epoch in range(max_epochs):
-        # Forward pass for training data
-        X = X_train
-        for i in range(len(layers) - 1):  # Do not include loss layer in forward pass
-
-            X = layers[i].forward(X)
-        
-        # Compute training loss
-        train_loss = layers[-1].eval(Y_train, X)
-        train_mse.append(train_loss)
-
-        # Compute gradient from loss
-        grad = layers[-1].gradient(Y_train, X)  
-
-        # Backpropagation
-        for i in range(len(layers) - 2, 0, -1):  
-            newgrad = layers[i].backward2(grad)
-            #print("grad shape: ", grad.shape)
-            #print("newgrad shape: ", newgrad.shape)
-            if isinstance(layers[i], FullyConnectedLayer):
-                # if newgrad.shape[1] != 1:  
-                #     newgrad = newgrad.reshape(-1, 1)
-                layers[i].updateWeights(grad, learning_rate)  
-            grad = newgrad
-        
-        #Now validation 
-
-        X_val_temp = X_val
-        for i in range(len(layers) - 1):  # Do not include loss layer in forward pass
-            X_val_temp = layers[i].forward(X_val_temp)
-        
-        # Compute validation loss
-        val_loss = layers[-1].eval(X_val_temp, Y_val)
-        val_mse.append(val_loss)
-
-        #print(f"Epoch {epoch}: Train Loss = {train_loss}, Val Loss ={val_loss}")
-        if epoch % 10000 == 0:
-            train_acc = accuracy(Y_train, X)
-            val_acc = accuracy(Y_val, X_val_temp)
-            print(f"Epoch {epoch}: Train Loss = {train_loss:.10f}, Val Loss = {val_loss:.10f}, Train Acc = {train_acc:.10f}, Val Acc = {val_acc:.10f}")
-
-        
-        # Check for convergence
-        if abs(prev_mse - val_loss) < tol:
-            print(f"Converged at epoch {epoch}")
-            break
-        prev_mse = val_loss
-    toc = time.perf_counter()  # End timer
-    print(f"Training Time: {toc - tic:.2f} seconds")
-    Y_hat = grad
-    #print("RMSE: ", RMSE(Y_train, Y_hat))
-    #print("SMAPE: ", SMAPE(Y_train, Y_hat))
-    return train_mse, val_mse
-
-
-def batch_generator(X, Y, batch_size=64):
-    """
-    Generator function to yield batches of data.
-    """
-    num_samples = X.shape[0]
-    while True:
-        for start in range(0, num_samples, batch_size):
-            end = min(start + batch_size, num_samples)
-            yield X[start:end], Y[start:end]
+# def batch_generator(X, Y, batch_size=64):
+#     """
+#     Generator function to yield batches of data.
+#     """
+#     num_samples = X.shape[0]
+#     while True:
+#         for start in range(0, num_samples, batch_size):
+#             end = min(start + batch_size, num_samples)
+#             yield X[start:end], Y[start:end]
 
 def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epochs=100000, tol=1e-10, batch_size=64):
     input_dim = X_train.shape[1]
@@ -183,10 +111,12 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max
         val_loss = layers[-1].eval(X_val_temp, Y_val)
         val_mse.append(val_loss)
 
-        if epoch % 1000 == 0:
-            train_acc = accuracy(Y_train, X)
-            val_acc = accuracy(Y_val, X_val_temp)
-            print(f"Epoch {epoch}: Train Loss = {train_loss:.10f}, Val Loss = {val_loss:.10f}, Train Acc = {train_acc:.10f}, Val Acc = {val_acc:.10f}")
+        if epoch % 100 == 0:
+            train_smape = SMAPE(Y_train, X)
+            train_rmse = RMSE(Y_train, X)
+            val_smape = SMAPE(Y_val, X_val_temp)
+            val_rmse = RMSE(Y_val, X_val_temp)
+            print(f"Epoch {epoch}: Train Loss = {train_loss:.10f}, Val Loss = {val_loss:.10f}, Train SMAPE = {train_smape:.10f}, Train RMSE = {train_rmse:.10f}, Val SMAPE = {val_smape:.10f}, Val RMSE = {val_rmse:.10f}")
 
         if abs(prev_mse - val_loss) < tol:
             print(f"Converged at epoch {epoch}")
@@ -201,8 +131,8 @@ def plot_mse(train_mse, val_mse):
     plt.plot(train_mse, label="Training Log Loss")
     plt.plot(val_mse, label="Validation Log Loss")
     plt.xlabel("Epoch")
-    plt.ylabel("Log Loss")
-    plt.title("Log Loss vs Epoch")
+    plt.ylabel("Squared Error")
+    plt.title("Squared Error vs Epoch")
     plt.legend()
     plt.show()
     
@@ -210,70 +140,11 @@ def plot_mse_optimized(train_mse, val_mse):
     plt.plot(train_mse, label="Training Log Loss")
     plt.plot(val_mse, label="Validation Log Loss")
     plt.xlabel("Epoch")
-    plt.ylabel("Log Loss")
-    plt.title("Log Loss vs Epoch optimized")
+    plt.ylabel("Squared Error")
+    plt.title("Squared Error vs Epoch optimized")
     plt.legend()
     plt.show()
     
-import numpy as np
-
-def pca_numpy(X, num_components):
-    """
-    Perform PCA on dataset X using NumPy.
-    
-    Parameters:
-    - X: Input data of shape (num_samples, num_features)
-    - num_components: Number of principal components to retain
-
-    Returns:
-    - X_reduced: Transformed data with reduced dimensions
-    - explained_variance: Percentage of variance retained
-    """
-    X_mean = np.mean(X, axis=0)
-    X_centered = X - X_mean
-
-    covariance_matrix = np.cov(X_centered, rowvar=False)
-
-    eigenvalues, eigenvectors = np.linalg.eigh(covariance_matrix)  # eigh is optimized for symmetric matrices
-    sorted_indices = np.argsort(eigenvalues)[::-1]  # Descending order
-    eigenvalues = eigenvalues[sorted_indices]
-    eigenvectors = eigenvectors[:, sorted_indices]
-
-    selected_eigenvectors = eigenvectors[:, :num_components]
-
-    X_reduced = np.dot(X_centered, selected_eigenvectors)
-
-
-    explained_variance = np.sum(eigenvalues[:num_components]) / np.sum(eigenvalues)
-    print(f"Variance retained: {explained_variance * 100:.2f}%")
-    return X_reduced, explained_variance
-
-
-def pca_svd(X, num_components):
-    """
-    Perform PCA using Singular Value Decomposition (SVD), avoiding large covariance matrices.
-
-    Parameters:
-    - X: Input data of shape (num_samples, num_features)
-    - num_components: Number of principal components to retain
-
-    Returns:
-    - X_reduced: Transformed data with reduced dimensions
-    - explained_variance: Percentage of variance retained
-    """
-    X_mean = np.mean(X, axis=0)
-    X_centered = X - X_mean
-
-    U, S, Vt = np.linalg.svd(X_centered, full_matrices=False)
-
-    V_selected = Vt[:num_components, :]  # (num_components, num_features)
-
-    X_reduced = np.dot(X_centered, V_selected.T)  # (num_samples, num_components)
-
-    explained_variance = np.sum(S[:num_components]**2) / np.sum(S**2)
-
-    return X_reduced, explained_variance
-
 
 if __name__ == "__main__":
 
@@ -283,18 +154,9 @@ if __name__ == "__main__":
         X_val_reduced = f['xValidationReduced'][:]
         Y_val = f['yValidation'][:]
 
-
-
-
     print("Training data shape after reduction:", X_train_reduced.shape)
     print("Validation data shape after reduction:", X_val_reduced.shape)
 
-    # Training using the regular and optimized methods
-    print("\n\nRegular Training\n_____________________________________")
+    print("\n\nRunning shallow multiclass MLP with forward and back prop....\n_____________________________________")
     train_mse, val_mse = train_with_batching(X_train_reduced, Y_train, X_val_reduced, Y_val)
-
-    #print("\n\nOptimized Training for Speed\n_____________________________________")
-    #train_mse2, val_mse2 = train_optimized(X_train, Y_train, X_val, Y_val)
-
     plot_mse(train_mse, val_mse)
-    #plot_mse_optimized(train_mse2, val_mse2)
