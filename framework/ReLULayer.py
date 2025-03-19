@@ -6,6 +6,7 @@
 # All Rights Reserved 2025-2030
 #----------------------------------------------------import numpy as np
 from .Layer import Layer
+import numpy as np
 
 class ReLULayer(Layer):
     def __init__(self):
