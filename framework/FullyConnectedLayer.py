@@ -48,6 +48,7 @@ class FullyConnectedLayer(Layer):
         Y = dataIn@self.W + self.b #The The matmul function is the same simantically as @ intrduced in python 3.5 :)
         #print("FullyConnectedLayer Y.shape: ",Y.shape )
         self.setPrevOut(Y)
+        #print("Y shape output of FC layer forward: ", Y.shape)
         return Y
     
     def gradient(self):
@@ -102,7 +103,8 @@ class FullyConnectedLayer(Layer):
 
         #dW = self.getPrevIn() @ input_grad
         #dB = np.sum(input_grad, axis=0, keepdims=True)
-
+        #print("InputGrad shape: ", input_grad.shape)
+        #print("self.gradient shape: ", self.gradient().shape)
         grad_out = input_grad @ self.gradient()
         #self.setWeights(dW)
         #self.setBiases(dB)

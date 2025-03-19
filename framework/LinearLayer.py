@@ -22,8 +22,12 @@ class LinearLayer(Layer):
         self.dataIn = dataIn
         return dataIn
 
-    def gradient(self):
+    def gradient(self, gradient):
         
         if self.dataIn is None:
             raise ValueError("Cannot calc gradient for Linear: the dataIn is still set to None")
-        return np.eye(self.dataIn.shape[1])
+        return gradient
+    
+    def backward2(self, gradOutput):
+        # Implementing the backward pass for completeness
+        return self.gradient(gradOutput)

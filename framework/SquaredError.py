@@ -18,5 +18,7 @@ class SquaredError():
     #Input: Yhat is an N by K matrix of estimated values.
     #output: An N by K matrixS
     def gradient(self, Y, Yhat):
-         return np.atleast_2d(-2*(Y - Yhat) )
+      grad = -2 * (Y - Yhat)
+      #print(f"Gradient shape before reshape: {grad.shape}")  # Debugging
+      return grad.reshape(Y.shape)
 

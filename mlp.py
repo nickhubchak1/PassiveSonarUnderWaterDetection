@@ -14,13 +14,13 @@ from framework import (
 
     InputLayer,
 
-    SparseFullyConnectedLayer,
+    FullyConnectedLayer,
 
     TanhLayer,
 
     LinearLayer, 
 
-    LogLoss
+    SquaredError
 
 )
 
@@ -133,14 +133,15 @@ def batch_generator(X, Y, batch_size=64):
 def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epochs=100000, tol=1e-10, batch_size=64):
     input_dim = X_train.shape[1]
     output_dim =  1
+    Y_train = Y_train.reshape(-1, 1) #force to be (3000, 1)
 
     L1 = InputLayer(X_train)
-    print("Setting up Sparse Fully conected layer")
-    L2 = SparseFullyConnectedLayer(input_dim, input_dim)
+    #print("Setting up Sparse Fully conected layer")
+    L2 = FullyConnectedLayer(input_dim, input_dim)
     L3 = TanhLayer()
-    L4 = SparseFullyConnectedLayer(input_dim, output_dim)
-    L5 = ()
-    L6 = LogLoss()
+    L4 = FullyConnectedLayer(input_dim, output_dim)
+    L5 = LinearLayer()
+    L6 = SquaredError()
     
     layers = [L1, L2, L3, L4, L5, L6]
     
@@ -150,27 +151,28 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max
     prev_mse = float('inf')
     
     # Initialize the batch generator
-    train_gen = batch_generator(X_train, Y_train, batch_size=batch_size)
+    #train_gen = batch_generator(X_train, Y_train, batch_size=batch_size)
     
     for epoch in range(max_epochs):
         # Training loop with mini-batches
-        X_batch, Y_batch = next(train_gen)
+        #X_batch, Y_batch = next(train_gen)
         
         # Forward pass for training data
-        X = X_batch
+        X = X_train
         for layer in layers[:-1]:
             X = layer.forward(X)
-
-        train_loss = layers[-1].eval(Y_batch, X)
+        #print("X shape going into squared error: ", X.shape)
+        #print("Y_train shape: ", Y_train.shape)
+        train_loss = layers[-1].eval(Y_train, X)
         train_mse.append(train_loss)
 
-        grad = layers[-1].gradient(Y_batch, X)
-
+        grad = layers[-1].gradient(Y_train, X)
+        #print("grad shape from Squared Error forward training: ", grad.shape)
         # Backpropagation
         for i in range(len(layers) - 2, 0, -1):
             newgrad = layers[i].backward2(grad)
-            if isinstance(layers[i], SparseFullyConnectedLayer):
-                layers[i].update_weights(grad, learning_rate)
+            if isinstance(layers[i], FullyConnectedLayer):
+                layers[i].updateWeights(grad, learning_rate)
             grad = newgrad
         
         # Validation
@@ -181,7 +183,7 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max
         val_loss = layers[-1].eval(X_val_temp, Y_val)
         val_mse.append(val_loss)
 
-        if epoch % 10000 == 0:
+        if epoch % 1000 == 0:
             train_acc = accuracy(Y_train, X)
             val_acc = accuracy(Y_val, X_val_temp)
             print(f"Epoch {epoch}: Train Loss = {train_loss:.10f}, Val Loss = {val_loss:.10f}, Train Acc = {train_acc:.10f}, Val Acc = {val_acc:.10f}")
@@ -276,19 +278,12 @@ def pca_svd(X, num_components):
 if __name__ == "__main__":
 
     with h5py.File('Training_and_Validation.h5', 'r') as f:
-        loaded_features = f['features'][:].astype(np.float32)  # used to be 64 but too large to process
-        loaded_labels = f['labels'][:].astype(np.float32) #needs to be 32 because anything less wont be supported by svd
+        X_train_reduced = f['xTrainReduced'][:]
+        Y_train = f['yTrain'][:]
+        X_val_reduced = f['xValidationReduced'][:]
+        Y_val = f['yValidation'][:]
 
-    #Shuffle
-    subset_size = int(len(loaded_features) * 1)  # 100% of the data can use 0.1 for 10%
-    indices = np.random.choice(len(loaded_features), size=subset_size, replace=False)
-    loaded_features = loaded_features[indices]
-    loaded_labels = loaded_labels[indices]
 
-    # Split the dataset into 1/3 for training and 2/3 for validation
-    split_index = len(loaded_features) // 3
-    X_train, X_val = loaded_features[split_index:], loaded_features[:split_index]
-    Y_train, Y_val = loaded_labels[split_index:], loaded_labels[:split_index]
 
 
     print("Training data shape after reduction:", X_train_reduced.shape)
