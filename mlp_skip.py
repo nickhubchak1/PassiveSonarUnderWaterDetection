@@ -18,7 +18,9 @@ from framework import (
 
     TanhLayer,
 
-    LinearLayer, 
+    LinearLayer,
+    
+    AddLayer, 
 
     SquaredError
 
@@ -52,15 +54,26 @@ def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.001
     output_dim =  1
     Y_train = Y_train.reshape(-1, 1) #force to be (3000, 1)
 
-    L1 = InputLayer(X_train)
-    #print("Setting up Sparse Fully conected layer")
-    L2 = FullyConnectedLayer(input_dim, input_dim)
-    L3 = TanhLayer()
-    L4 = FullyConnectedLayer(input_dim, output_dim)
-    L5 = LinearLayer()
-    L6 = SquaredError()
+    # Main network branch
+    L1_main = InputLayer(X_train)
+    L2_main = FullyConnectedLayer(input_dim, 128)
+    L3_main = TanhLayer()
+    L4_main = FullyConnectedLayer(128, 128)
+    L5_main = TanhLayer()
+    L6_main = FullyConnectedLayer(128, output_dim)
     
-    layers = [L1, L2, L3, L4, L5, L6]
+    # Residual connection branch
+    L1_res = InputLayer(X_train)
+    L2_res = FullyConnectedLayer(input_dim, output_dim)
+    L3_res = LinearLayer()
+
+    # Fuse the two branches
+    L7 = AddLayer(L6_main, L3_res)
+
+    # Loss function
+    L8 = SquaredError()
+
+    layers = [L1_main, L2_main, L3_main, L4_main, L5_main, L6_main, L1_res, L2_res,L3_res, L7, L8]
     
     train_mse, val_mse = [], []
     Y_hat = []
@@ -75,36 +88,52 @@ def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.001
         #X_batch, Y_batch = next(train_gen)
         
         # Forward pass for training data
-        X = X_train
-        for layer in layers[:-1]:
-            X = layer.forward(X)
-        #print("X shape going into squared error: ", X.shape)
+        X_main = X_train
+        X_res = X_train
+        for layer in [L1_main, L2_main, L3_main, L4_main, L5_main, L6_main]:
+            X_main = layer.forward(X_main)
+        for layer in [L1_res, L2_res, L3_res]:
+            X_res = layer.forward(X_res)
+        X_fused = L7.forward(X_main, X_res)
+        #print("X_fused shape going into squared error: ", X_fused.shape)
         #print("Y_train shape: ", Y_train.shape)
-        train_loss = layers[-1].eval(Y_train, X)
+        train_loss = L8.eval(Y_train, X_fused)
         train_mse.append(train_loss)
 
-        grad = layers[-1].gradient(Y_train, X)
+        grad = L8.gradient(Y_train, X_fused)
         #print("grad shape from Squared Error forward training: ", grad.shape)
         # Backpropagation
-        for i in range(len(layers) - 2, 0, -1):
-            newgrad = layers[i].backward2(grad)
-            if isinstance(layers[i], FullyConnectedLayer):
-                layers[i].updateWeights(grad, learning_rate)
-            grad = newgrad
+        grad_main, grad_res = L7.backward2(grad)
+        for i in range(len([L1_main, L2_main, L3_main, L4_main, L5_main, L6_main]) - 1, 0, -1):
+            layer = [L1_main, L2_main, L3_main, L4_main, L5_main, L6_main][i]
+            newgrad_main = layer.backward2(grad_main)
+            if isinstance(layer, FullyConnectedLayer):
+                layer.updateWeights(grad_main, learning_rate)
+            grad_main = newgrad_main
+        for i in range(len([L1_res, L2_res, L3_res]) - 1, 0, -1):
+            layer = [L1_res, L2_res, L3_res][i]
+            newgrad_res = layer.backward2(grad_res)
+            if isinstance(layer, FullyConnectedLayer):
+                layer.updateWeights(grad_res, learning_rate)
+            grad_res = newgrad_res
         
         # Validation
-        X_val_temp = X_val
-        for layer in layers[:-1]:
-            X_val_temp = layer.forward(X_val_temp)
+        X_val_temp_main = X_val
+        X_val_temp_res = X_val
+        for layer in [L1_main, L2_main, L3_main, L4_main, L5_main, L6_main]:
+            X_val_temp_main = layer.forward(X_val_temp_main)
+        for layer in [L1_res, L2_res]:
+            X_val_temp_res = layer.forward(X_val_temp_res)
+        X_val_temp_fused = L7.forward(X_val_temp_main, X_val_temp_res)
         
-        val_loss = layers[-1].eval(X_val_temp, Y_val)
+        val_loss = L8.eval(X_val_temp_fused, Y_val)
         val_mse.append(val_loss)
 
         if epoch % 100 == 0:
-            train_smape = SMAPE(Y_train, X)
-            train_rmse = RMSE(Y_train, X)
-            val_smape = SMAPE(Y_val, X_val_temp)
-            val_rmse = RMSE(Y_val, X_val_temp)
+            train_smape = SMAPE(Y_train, X_fused)
+            train_rmse = RMSE(Y_train, X_fused)
+            val_smape = SMAPE(Y_val, X_val_temp_fused)
+            val_rmse = RMSE(Y_val, X_val_temp_fused)
             print(f"Epoch {epoch}: Train Loss = {train_loss:.10f}, Val Loss = {val_loss:.10f}, Train SMAPE = {train_smape:.10f}, Train RMSE = {train_rmse:.10f}, Val SMAPE = {val_smape:.10f}, Val RMSE = {val_rmse:.10f}")
 
         if abs(prev_mse - val_loss) < tol:
@@ -136,6 +165,6 @@ if __name__ == "__main__":
     print("Training data shape after reduction:", X_train_reduced.shape)
     print("Validation data shape after reduction:", X_val_reduced.shape)
 
-    print("\n\nRunning shallow multiclass MLP with forward and back prop....\n_____________________________________")
+    print("\n\nRunning shallow multiclass MLP with forward and back prop and SKIP RESIDUAL....\n_____________________________________")
     train_mse, val_mse = train_validate_with_skip(X_train_reduced, Y_train, X_val_reduced, Y_val)
     plot_mse(train_mse, val_mse)
