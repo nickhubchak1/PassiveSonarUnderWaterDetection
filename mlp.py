@@ -58,7 +58,7 @@ def accuracy(Y, Yhat):
 #             end = min(start + batch_size, num_samples)
 #             yield X[start:end], Y[start:end]
 
-def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epochs=100000, tol=1e-10, batch_size=64):
+def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epochs=100000, tol=1e-10, batch_size=64):
     input_dim = X_train.shape[1]
     output_dim =  1
     Y_train = Y_train.reshape(-1, 1) #force to be (3000, 1)
@@ -148,5 +148,5 @@ if __name__ == "__main__":
     print("Validation data shape after reduction:", X_val_reduced.shape)
 
     print("\n\nRunning shallow multiclass MLP with forward and back prop....\n_____________________________________")
-    train_mse, val_mse = train_with_batching(X_train_reduced, Y_train, X_val_reduced, Y_val)
+    train_mse, val_mse = train_validate(X_train_reduced, Y_train, X_val_reduced, Y_val)
     plot_mse(train_mse, val_mse)

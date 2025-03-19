@@ -23,3 +23,26 @@ from framework import (
     SquaredError
 
 )
+
+def RMSE(Y, Yhat):
+    """
+    returns float
+    """
+    mse = np.mean((Y - Yhat) ** 2)  
+    rmse = np.sqrt((mse / len(Y))+1e-8)  
+    return rmse
+
+def SMAPE(Y, Yhat):
+    """
+    Returns float
+    """
+    epsilon = 1e-8
+    smape = np.mean(np.abs(Y - Yhat) / (np.abs(Y) + np.abs(Yhat) + epsilon))
+    return smape
+
+def accuracy(Y, Yhat):
+    """
+    Compute classification accuracy
+    """
+    predictions = (Yhat >= 0.5).astype(int)  # Convert probabilities to binary predictions
+    return np.mean(predictions == Y)
