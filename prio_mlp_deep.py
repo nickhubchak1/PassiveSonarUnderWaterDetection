@@ -63,25 +63,27 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.01, max_
     input_dim = X_train.shape[1]
     output_dim =  1
     Y_train = Y_train.reshape(-1, 1) #force to be (3000, 1)
+    
+    # print("Y_train: ", Y_train)
 
     best_val_loss = float("inf")
     patience_counter = 0
 
     L1 = InputLayer(X_train)
     L2 = FullyConnectedLayer(input_dim, 128)
-    L3 = ReLULayer()
+    L3 = TanhLayer()
     L4 = FullyConnectedLayer(128, 128)
-    L5 = ReLULayer()
+    L5 = TanhLayer()
     L6 = FullyConnectedLayer(128, 128)
-    L7 = ReLULayer()
+    L7 = TanhLayer()
     L8 = FullyConnectedLayer(128, 128)
-    L9 = ReLULayer()
+    L9 = TanhLayer()
     L10 = FullyConnectedLayer(128, 128)
-    L11 = ReLULayer()
+    L11 = TanhLayer()
     L12 = FullyConnectedLayer(128, 128)
-    L13 = ReLULayer()
+    L13 = TanhLayer()
     L14 = FullyConnectedLayer(128, 128)
-    L15 = ReLULayer()
+    L15 = TanhLayer()
     L16 = FullyConnectedLayer(128, 1)
     L17 = LinearLayer()
     L18 = SquaredError()
@@ -119,7 +121,8 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.01, max_
         #print("Y_train shape: ", Y_train.shape)
         train_loss = layers[-1].eval(Y_train, X)
         train_mse.append(train_loss)
-
+        train_predictions = X
+        
         grad = layers[-1].gradient(Y_train, X)
         #print("grad shape from Squared Error forward training: ", grad.shape)
         # Backpropagation
@@ -134,6 +137,7 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.01, max_
         for layer in layers[:-1]:
             X_val_temp = layer.forward(X_val_temp)
         
+        val_predictions = X_val_temp
         val_loss = layers[-1].eval(X_val_temp, Y_val)
         val_mse.append(val_loss)
 
@@ -168,14 +172,14 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.01, max_
     X_pred = copy.deepcopy(X_val)
     for layer in layers[:-1]:  # Exclude SquaredError
         X_pred = layer.forward(X_pred)
-    print(X_pred)
+    # print(X_pred)
     # Y_pred = X_pred.reshape(-1, 1)
     
-    print("X_val_temp: \n", X_val_temp)
+    # print("X_val_temp: \n", X_val_temp)
 
     toc = time.perf_counter()
     print(f"Training Time: {toc - tic:.2f} seconds")
-    return train_mse, val_mse, train_acc, val_acc, X_pred
+    return train_mse, val_mse, train_acc, val_acc, train_predictions, val_predictions
 
 def plot_mse(train_mse, val_mse):
     
@@ -189,17 +193,17 @@ def plot_mse(train_mse, val_mse):
     # plt.show()
 
 
-def plot_predictions(Y_true, Y_pred, title="Predictions vs Ground Truth"):
-    plt.figure(figsize=(8,6))
-    plt.scatter(Y_true, Y_pred, alpha=0.5, label="Predictions")
-    plt.plot([Y_true.min(), Y_true.max()], [Y_true.min(), Y_true.max()], 'r--', label="Ideal")
-    plt.xlabel("Ground Truth")
-    plt.ylabel("Predictions")
-    plt.title(title)
-    plt.legend()
-    plt.grid()
-    plt.savefig("Graphs/DeepNet_Predictions_vs_GroundTruth.png")
-    # plt.show()
+# def plot_predictions(Y_true, Y_pred, title="Predictions vs Ground Truth"):
+#     plt.figure(figsize=(8,6))
+#     plt.scatter(Y_true, Y_pred, alpha=0.5, label="Predictions")
+#     plt.plot([Y_true.min(), Y_true.max()], [Y_true.min(), Y_true.max()], 'r--', label="Ideal")
+#     plt.xlabel("Ground Truth")
+#     plt.ylabel("Predictions")
+#     plt.title(title)
+#     plt.legend()
+#     plt.grid()
+#     plt.savefig("Graphs/DeepNet_Predictions_vs_GroundTruth.png")
+#     # plt.show()
 
 def plot_accuracy_curve(train_acc, val_acc):
     plt.figure(figsize=(8,6))
@@ -212,6 +216,27 @@ def plot_accuracy_curve(train_acc, val_acc):
     plt.grid()
     plt.savefig("Graphs/DeepNet_Accuracy_Curve.png")
     # plt.show()
+    
+def plot_ground_truth_vs_prediction(Y_validation, prediction, title="Ground Truth vs Prediction for Validation"):
+    plt.figure(figsize=(8, 6))
+    Y_validation = Y_validation.reshape(-1, 1) #force to be (3000, 1)
+
+    m = 1  
+    x = np.arange(len(prediction))  
+    #pred_adjusted = m * prediction.T + x
+    #pred_adjusted = pred_adjusted.T
+    print("Yvalidation shape: ", Y_validation.shape)
+    print("prediction: ", prediction.shape)
+    plt.scatter(Y_validation, prediction, alpha=0.5, label="Predictions", color='blue')
+    plt.plot([min(Y_validation), max(Y_validation)], [min(Y_validation), max(Y_validation)], 
+             linestyle='dashed', color='red', label="Ideal Prediction (y = x)")
+    
+    plt.xlabel("Ground Truth (y_validation)")
+    plt.ylabel("Predicted (X_fused)")
+    plt.title(title)
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 if __name__ == "__main__":
 
@@ -225,7 +250,7 @@ if __name__ == "__main__":
     print("Validation data shape after reduction:", X_val_reduced.shape)
 
     print("\n\nRunning Deep MLP with forward and back prop....\n_____________________________________")
-    train_mse, val_mse, train_acc, val_acc, X_pred = train_with_batching(X_train_reduced, Y_train, X_val_reduced, Y_val, max_epochs=50)
+    train_mse, val_mse, train_acc, val_acc, train_predictions, val_predictions = train_with_batching(X_train_reduced, Y_train, X_val_reduced, Y_val)
     plot_mse(train_mse, val_mse)
     plot_accuracy_curve(train_acc, val_acc)
 
@@ -236,11 +261,16 @@ if __name__ == "__main__":
 
     # Plot results
     # plot_mse(train_mse, val_mse)
-    print("Y_val: \n", Y_val)
-    plot_predictions(Y_val, X_pred)
+    # print("Y_val: \n", Y_val)
+    # plot_predictions(Y_val, X_pred)
     
-    results_df = pd.DataFrame({"Ground Truth": Y_val, "Predictions": np.squeeze(X_pred.reshape(-1, 1))})
-    csv_filename = os.path.join("Graphs", "Ground_Truth_vs_Predictions.csv")
-    results_df.to_csv(csv_filename, index=False)
+    
+    # results_df = pd.DataFrame({"Ground Truth": Y_val, "Predictions": np.squeeze(X_pred.reshape(-1, 1))})
+    # csv_filename = os.path.join("Graphs", "Ground_Truth_vs_Predictions.csv")
+    # results_df.to_csv(csv_filename, index=False)
+    
+    # plot_ground_truth_vs_prediction(Y_val, val_predictions)
+    # plt.figure()
+    # plt.plot(val_predictions)
     
     plt.show()

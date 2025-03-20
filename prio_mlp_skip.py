@@ -38,25 +38,25 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.01, max_
 
     L1 = InputLayer(X_train)
     L2 = FullyConnectedLayer(input_dim, 128)
-    L3 = ReLULayer()
+    L3 = TanhLayer()
     L4 = FullyConnectedLayer(128, 128)
-    L5 = ReLULayer()
+    L5 = TanhLayer()
     Add1 = AddLayer()
 
     L6 = FullyConnectedLayer(128, 128)
-    L7 = ReLULayer()
+    L7 = TanhLayer()
     L8 = FullyConnectedLayer(128, 128)
-    L9 = ReLULayer()
+    L9 = TanhLayer()
     Add2 = AddLayer()
 
     L10 = FullyConnectedLayer(128, 128)
-    L11 = ReLULayer()
+    L11 = TanhLayer()
     L12 = FullyConnectedLayer(128, 128)
-    L13 = ReLULayer()
+    L13 = TanhLayer()
     Add3 = AddLayer()
 
     L14 = FullyConnectedLayer(128, 128)
-    L15 = ReLULayer()
+    L15 = TanhLayer()
     L16 = FullyConnectedLayer(128, 1)
     L17 = LinearLayer()
     L18 = SquaredError()
@@ -201,7 +201,7 @@ if __name__ == "__main__":
     print("Validation data shape after reduction:", X_val_reduced.shape)
 
     print("\n\nRunning Residual Network MLP with forward and back prop....\n_____________________________________")
-    train_mse, val_mse, train_acc, val_acc, layers = train_with_batching(X_train_reduced, Y_train, X_val_reduced, Y_val, max_epochs=100)
+    train_mse, val_mse, train_acc, val_acc, layers = train_with_batching(X_train_reduced, Y_train, X_val_reduced, Y_val)
     plot_mse(train_mse, val_mse)
     plot_accuracy_curve(train_acc, val_acc)
 
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 
     # Plot results
     # plot_mse(train_mse, val_mse)
-    plot_predictions(Y_val, X_pred)
+    # plot_predictions(Y_val, X_pred)
     
 
     
