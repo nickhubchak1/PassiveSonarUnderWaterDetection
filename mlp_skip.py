@@ -50,7 +50,7 @@ def accuracy(Y, Yhat):
     predictions = (Yhat >= 0.5).astype(int)  # Convert probabilities to binary predictions
     return np.mean(predictions == Y)
 
-def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.00005, max_epochs=100000, tol=1e-10, batch_size=64):
+def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.00005, max_epochs=100000, tol=1e-10, patience=20):
     input_dim = X_train.shape[1]
     output_dim =  1
     Y_train = Y_train.reshape(-1, 1) #force to be (3000, 1)
@@ -84,6 +84,7 @@ def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.000
     Y_hat = []
     tic = time.perf_counter()
     prev_mse = float('inf')
+    patience_counter = 0
     
     # Initialize the batch generator
     #train_gen = batch_generator(X_train, Y_train, batch_size=batch_size)
@@ -198,9 +199,19 @@ def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.000
             val_smape = SMAPE(Y_val, X_val_temp_fused)
             val_rmse = RMSE(Y_val, X_val_temp_fused)
             print(f"Epoch {epoch}: Train Loss = {train_loss:.10f}, Val Loss = {val_loss:.10f}, Train SMAPE = {train_smape:.10f}, Train RMSE = {train_rmse:.10f}, Val SMAPE = {val_smape:.10f}, Val RMSE = {val_rmse:.10f}")
-
+        
         if abs(prev_mse - val_loss) < tol:
             print(f"Converged at epoch {epoch}")
+            break
+
+        if(prev_mse >= val_loss):
+            patience_counter = 0
+            prev_mse = val_loss   
+        else:
+            patience_counter += 1
+        
+        if patience_counter >= patience:
+            print("Convergence detected. Early stopping initiated.")
             break
         prev_mse = val_loss
 
