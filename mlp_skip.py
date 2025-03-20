@@ -7,7 +7,6 @@
 import h5py
 import time
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 from framework import (
@@ -16,6 +15,8 @@ from framework import (
 
     FullyConnectedLayer,
 
+    TanhLayer,
+    
     ReLULayer,
 
     LinearLayer,
@@ -49,7 +50,7 @@ def accuracy(Y, Yhat):
     predictions = (Yhat >= 0.5).astype(int)  # Convert probabilities to binary predictions
     return np.mean(predictions == Y)
 
-def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epochs=100000, tol=1e-10, batch_size=64):
+def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.00005, max_epochs=100000, tol=1e-10, batch_size=64):
     input_dim = X_train.shape[1]
     output_dim =  1
     Y_train = Y_train.reshape(-1, 1) #force to be (3000, 1)
@@ -57,9 +58,9 @@ def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.001
     # Main network branch
     L1_main = InputLayer(X_train)
     L2_main = FullyConnectedLayer(input_dim, 128)
-    L3_main = ReLULayer()
+    L3_main = TanhLayer()
     L4_main = FullyConnectedLayer(128, 128)
-    L5_main = ReLULayer()
+    L5_main = TanhLayer()
     L6_main = FullyConnectedLayer(128, output_dim)
     
     # Residual connection branch

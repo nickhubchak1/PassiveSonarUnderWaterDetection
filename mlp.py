@@ -59,7 +59,7 @@ def accuracy(Y, Yhat):
 #             end = min(start + batch_size, num_samples)
 #             yield X[start:end], Y[start:end]
 
-def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.005, max_epochs=100000, tol=1e-6, batch_size=64):
+def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.0001, max_epochs=100000, tol=1e-6, batch_size=64):
     input_dim = X_train.shape[1]
     output_dim =  1
     Y_train = Y_train.reshape(-1, 1) #force to be (3000, 1)
@@ -70,15 +70,13 @@ def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.005, max_epoc
     L3 = TanhLayer()
     L4 = FullyConnectedLayer(input_dim, 750)  
     L5 = TanhLayer()
-    L6 = FullyConnectedLayer(750, 300)  
-    L7 = TanhLayer()  
-    L8 = FullyConnectedLayer(300, output_dim)  
+    L8 = FullyConnectedLayer(750, output_dim)  
     L9 = LinearLayer()
     L10 = SquaredError() 
     #L3 = ReLULayer() #Used for testing results were mixed val loss was lower by 0.05 and converged at epoch 1400, relu hits the vanishing gradients easier
 
     
-    layers = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10]
+    layers = [L1, L2, L3, L4, L5,L8, L9, L10]
     
     train_mse, val_mse = [], []
     Y_hat = []
@@ -149,7 +147,6 @@ def plot_ground_truth_vs_prediction(Y_validation, prediction, title="Ground Trut
     plt.figure(figsize=(8, 6))
     Y_validation = Y_validation.reshape(-1, 1) #force to be (3000, 1)
 
-    m = 1  
     x = np.arange(len(prediction))  
     #pred_adjusted = m * prediction.T + x
     #pred_adjusted = pred_adjusted.T
@@ -176,7 +173,7 @@ if __name__ == "__main__":
 
     
     print("Xtrain reduced: ", X_train_reduced[0:50])
-    print("Xtrain reduced: ", Y_train[0:50])
+    print("Ytrain reduced: ", Y_train[0:50])
 
     print("Training data shape after reduction:", X_train_reduced.shape)
     print("Validation data shape after reduction:", X_val_reduced.shape)
