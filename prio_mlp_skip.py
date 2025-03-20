@@ -25,8 +25,8 @@ def SMAPE(Y, Yhat):
     return smape
 
 def accuracy(Y, Yhat):
-    predictions = (Yhat >= 0.5).astype(int)
-    return np.mean(predictions == Y)
+    predictions = ((Y - Yhat) <= 2).astype(int)  
+    return np.mean(predictions)
 
 def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.01, max_epochs=100000, tol=1e-10, batch_size=64, patience=20):
     input_dim = X_train.shape[1]
@@ -70,6 +70,8 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.01, max_
     ]
 
     train_mse, val_mse = [], []
+    train_acc, val_acc = [], []
+    
     tic = time.perf_counter()
     prev_mse = float('inf')
 
@@ -129,14 +131,18 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.01, max_
         val_loss = layers[-1].eval(X_val_temp, Y_val)
         val_mse.append(val_loss)
 
-        if epoch % 100 == 0:
+        if epoch % 10 == 0:
             train_smape = SMAPE(Y_train, X)
             train_rmse = RMSE(Y_train, X)
             val_smape = SMAPE(Y_val, X_val_temp)
             val_rmse = RMSE(Y_val, X_val_temp)
-            print(f"Epoch {epoch}: Train Loss = {train_loss:.10f}, Val Loss = {val_loss:.10f}, Train SMAPE = {train_smape:.10f}, Train RMSE = {train_rmse:.10f}, Val SMAPE = {val_smape:.10f}, Val RMSE = {val_rmse:.10f}")
+            train_accuracy = accuracy(Y_train, X)
+            val_accuracy = accuracy(Y_val, X_val_temp)
+            train_acc.append(train_accuracy)
+            val_acc.append(val_accuracy)
+            print(f"Epoch {epoch}: Train Loss = {train_loss:.10f}, Val Loss = {val_loss:.10f}, Train Accuracy: {train_accuracy:.4f}, Val Accuracy: {val_accuracy:.4f}, Train SMAPE = {train_smape:.10f}, Train RMSE = {train_rmse:.10f}, Val SMAPE = {val_smape:.10f}, Val RMSE = {val_rmse:.10f}")
 
-        if val_loss < best_val_loss:
+        if val_loss <= best_val_loss:
             best_val_loss = val_loss
             patience_counter = 0
         else:
@@ -148,7 +154,7 @@ def train_with_batching(X_train, Y_train, X_val, Y_val, learning_rate=0.01, max_
 
     toc = time.perf_counter()
     print(f"Training Time: {toc - tic:.2f} seconds")
-    return train_mse, val_mse
+    return train_mse, val_mse, train_acc, val_acc, layers
 
 def plot_mse(train_mse, val_mse):
     plt.plot(train_mse, label="Train Squared Error")
@@ -157,8 +163,32 @@ def plot_mse(train_mse, val_mse):
     plt.ylabel("Squared Error")
     plt.title("Squared Error vs Epoch")
     plt.legend()
-    plt.savefig("Graphs/Deep_MLP.png")
-    plt.show()
+    plt.savefig("Graphs/Resnet_MSE.png")
+    # plt.show()
+    
+def plot_predictions(Y_true, Y_pred, title="Predictions vs Ground Truth"):
+    plt.figure(figsize=(8,6))
+    plt.scatter(Y_true, Y_pred, alpha=0.5, label="Predictions")
+    plt.plot([Y_true.min(), Y_true.max()], [Y_true.min(), Y_true.max()], 'r--', label="Ideal")
+    plt.xlabel("Ground Truth")
+    plt.ylabel("Predictions")
+    plt.title(title)
+    plt.legend()
+    plt.grid()
+    plt.savefig("Graphs/Resnet_Predictions_vs_GroundTruth.png")
+    # plt.show()
+
+def plot_accuracy_curve(train_acc, val_acc):
+    plt.figure(figsize=(8,6))
+    plt.plot(train_acc, label="Train Accuracy")
+    plt.plot(val_acc, label="Val Accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title("Accuracy vs Epochs")
+    plt.legend()
+    plt.grid()
+    plt.savefig("Graphs/Resnet_Accuracy_Curve.png")
+    # plt.show()
 
 if __name__ == "__main__":
     with h5py.File('Training_and_Validation.h5', 'r') as f:
@@ -170,6 +200,22 @@ if __name__ == "__main__":
     print("Training data shape after reduction:", X_train_reduced.shape)
     print("Validation data shape after reduction:", X_val_reduced.shape)
 
-    print("\n\nRunning Deep MLP with forward and back prop....\n_____________________________________")
-    train_mse, val_mse = train_with_batching(X_train_reduced, Y_train, X_val_reduced, Y_val)
+    print("\n\nRunning Residual Network MLP with forward and back prop....\n_____________________________________")
+    train_mse, val_mse, train_acc, val_acc, layers = train_with_batching(X_train_reduced, Y_train, X_val_reduced, Y_val, max_epochs=100)
     plot_mse(train_mse, val_mse)
+    plot_accuracy_curve(train_acc, val_acc)
+
+
+
+ # Generate Predictions for the final model
+    X_pred = X_val_reduced
+    for layer in layers[:-1]:  # Exclude SquaredError
+        X_pred = layer.forward(X_pred)
+
+    # Plot results
+    # plot_mse(train_mse, val_mse)
+    plot_predictions(Y_val, X_pred)
+    
+
+    
+    plt.show()

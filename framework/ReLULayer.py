@@ -4,7 +4,7 @@
 # Under Water Passive Acoustic Source Localization
 # Author: Nick Hubchak
 # All Rights Reserved 2025-2030
-#----------------------------------------------------import numpy as np
+#-----------------------------------------------------
 from .Layer import Layer
 import numpy as np
 
