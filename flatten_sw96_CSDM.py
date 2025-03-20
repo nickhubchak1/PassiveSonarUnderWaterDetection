@@ -91,14 +91,13 @@ def read_from_sw96_CSDM(path):
     n_samples = features.shape[0]
     n_features = np.prod(features.shape[1:])  
 
-    features_flattened = features.reshape(n_samples, 441) 
 
     X_mean = 4.8561368037430336e-11
     X_var = 2.2572550317402957e-10
-    features_normalized = (features_flattened - X_mean)/X_var 
-    mean_matrix = np.mean(features_normalized, axis=1)
-
-    print("mean_matrix shape: ", mean_matrix.shape)
+    features_normalized = (features - X_mean)/X_var 
+    mean_matrix = np.mean(features, axis=1)
+    features_flattened = mean_matrix.reshape(n_samples, 441) 
+    print("flattened_matrix shape: ", features_flattened.shape)
 
 
     #Used this to create flattened_data.npz, not as good as h5
@@ -106,7 +105,7 @@ def read_from_sw96_CSDM(path):
 
     # Save the flattened features and labels to an HDF5 file, checkpoint for data before splitting
     with h5py.File('flattened_data.h5', 'w') as f:
-        f.create_dataset('features', data=mean_matrix)
+        f.create_dataset('features', data=features_flattened)
         f.create_dataset('labels', data=labels)
 
     
