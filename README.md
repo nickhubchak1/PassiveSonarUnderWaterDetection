@@ -75,4 +75,7 @@ MLP Shallow w. Skip Residual Training VS Validation w.r.t. Epochs             | 
 
 We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **Validation Loss = 5.7540781178, SMAPE = 0.2991907063, RMSE = 0.0619359514**
 
+Epoch 4600: Train Loss = 1.4718474086, Val Loss = 10.6940970060, Train SMAPE = 0.1863646859, Train RMSE = 0.0221500746, Val SMAPE = 0.3940859529, Val RMSE = 0.0844358218
+Convergence detected. Early stopping initiated.
+Training Time: 627.61 seconds
 
