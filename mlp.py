@@ -18,6 +18,8 @@ from framework import (
 
     TanhLayer,
 
+    ReLULayer,
+
     LinearLayer, 
 
     SquaredError
@@ -58,7 +60,7 @@ def accuracy(Y, Yhat):
 #             end = min(start + batch_size, num_samples)
 #             yield X[start:end], Y[start:end]
 
-def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epochs=100000, tol=1e-6, batch_size=64):
+def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.005, max_epochs=100000, tol=1e-6, batch_size=64):
     input_dim = X_train.shape[1]
     output_dim =  1
     Y_train = Y_train.reshape(-1, 1) #force to be (3000, 1)
@@ -67,11 +69,17 @@ def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epoc
     #print("Setting up Sparse Fully conected layer")
     L2 = FullyConnectedLayer(input_dim, input_dim)
     L3 = TanhLayer()
-    L4 = FullyConnectedLayer(input_dim, output_dim)
-    L5 = LinearLayer()
-    L6 = SquaredError()
+    L4 = FullyConnectedLayer(input_dim, 750)  
+    L5 = TanhLayer()
+    L6 = FullyConnectedLayer(750, 300)  
+    L7 = TanhLayer()  
+    L8 = FullyConnectedLayer(300, output_dim)  
+    L9 = LinearLayer()
+    L10 = SquaredError() 
+    #L3 = ReLULayer() #Used for testing results were mixed val loss was lower by 0.05 and converged at epoch 1400, relu hits the vanishing gradients easier
+
     
-    layers = [L1, L2, L3, L4, L5, L6]
+    layers = [L1, L2, L3, L4, L5, L6, L7, L8, L9, L10]
     
     train_mse, val_mse = [], []
     Y_hat = []
@@ -91,6 +99,7 @@ def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epoc
             X = layer.forward(X)
         #print("X shape going into squared error: ", X.shape)
         #print("Y_train shape: ", Y_train.shape)
+        train_prediction = X
         train_loss = layers[-1].eval(Y_train, X)
         train_mse.append(train_loss)
 
@@ -100,6 +109,7 @@ def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epoc
         for i in range(len(layers) - 2, 0, -1):
             newgrad = layers[i].backward2(grad)
             if isinstance(layers[i], FullyConnectedLayer):
+                #print(f"Layer {i} weight gradient norm: {np.linalg.norm(grad)}") 
                 layers[i].updateWeights(grad, learning_rate)
             grad = newgrad
         
@@ -107,7 +117,7 @@ def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epoc
         X_val_temp = X_val
         for layer in layers[:-1]:
             X_val_temp = layer.forward(X_val_temp)
-        
+        val_predictions = X_val_temp
         val_loss = layers[-1].eval(X_val_temp, Y_val)
         val_mse.append(val_loss)
 
@@ -125,7 +135,7 @@ def train_validate(X_train, Y_train, X_val, Y_val, learning_rate=0.001, max_epoc
 
     toc = time.perf_counter()
     print(f"Training Time: {toc - tic:.2f} seconds")
-    return train_mse, val_mse
+    return train_mse, val_mse, train_prediction, val_predictions
 
 def plot_mse(train_mse, val_mse):
     plt.plot(train_mse, label="Train Squared Error")
@@ -134,6 +144,27 @@ def plot_mse(train_mse, val_mse):
     plt.ylabel("Squared Error")
     plt.title("Squared Error vs Epoch")
     plt.legend()
+    plt.show()
+
+def plot_ground_truth_vs_prediction(Y_validation, prediction, title="Ground Truth vs Prediction for Validation"):
+    plt.figure(figsize=(8, 6))
+    Y_validation = Y_validation.reshape(-1, 1) #force to be (3000, 1)
+
+    m = 1  
+    x = np.arange(len(prediction))  
+    #pred_adjusted = m * prediction.T + x
+    #pred_adjusted = pred_adjusted.T
+    print("Yvalidation shape: ", Y_validation.shape)
+    print("prediction: ", prediction.shape)
+    plt.scatter(Y_validation, prediction, alpha=0.5, label="Predictions", color='blue')
+    plt.plot([min(Y_validation), max(Y_validation)], [min(Y_validation), max(Y_validation)], 
+             linestyle='dashed', color='red', label="Ideal Prediction (y = x)")
+    
+    plt.xlabel("Ground Truth (y_validation)")
+    plt.ylabel("Predicted (X_fused)")
+    plt.title(title)
+    plt.legend()
+    plt.grid(True)
     plt.show()
     
 if __name__ == "__main__":
@@ -144,9 +175,14 @@ if __name__ == "__main__":
         X_val_reduced = f['xValidationReduced'][:]
         Y_val = f['yValidation'][:]
 
+    
+    print("Xtrain reduced: ", X_train_reduced[0:50])
+    print("Xtrain reduced: ", Y_train[0:50])
+
     print("Training data shape after reduction:", X_train_reduced.shape)
     print("Validation data shape after reduction:", X_val_reduced.shape)
 
     print("\n\nRunning shallow multiclass MLP with forward and back prop....\n_____________________________________")
-    train_mse, val_mse = train_validate(X_train_reduced, Y_train, X_val_reduced, Y_val)
+    train_mse, val_mse, train_predictions, val_predictions = train_validate(X_train_reduced, Y_train, X_val_reduced, Y_val)
     plot_mse(train_mse, val_mse)
+    plot_ground_truth_vs_prediction(Y_val, val_predictions)

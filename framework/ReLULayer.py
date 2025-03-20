@@ -27,3 +27,8 @@ class ReLULayer(Layer):
             raise ValueError("Cannot calculate gradient: dataIn is None")
         
         return (self.dataIn > 0).astype(float)  # Element-wise derivative
+    
+    def backward2(self, d_out):
+  
+        d_x = d_out * (self.dataIn > 0) 
+        return d_x
