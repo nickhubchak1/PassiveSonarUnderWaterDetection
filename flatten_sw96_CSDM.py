@@ -77,17 +77,10 @@ def read_from_sw96_CSDM(path):
     feature_dtype = np.complex128  
 
 
-    n_elements = np.prod(feature_shape)
+    features = np.memmap(path + 'features.dat', dtype=np.complex128, mode="r", shape = feature_shape)
+    
 
-    real_part = np.fromfile(path + '/features.dat', dtype=np.float64, count=n_elements)
-    imag_part = np.fromfile(path  + '/features.dat', dtype=np.float64, count=n_elements)
-
-    features = real_part + 1j * imag_part 
-
-    features = features.reshape(*feature_shape)
-    feature_shape = metadata["shape"]
-    feature_dtype = metadata["dtype"]
-
+ 
     frequencies = np.load(path + '/frequencies.npy') 
     labels = np.load(path + '/labels.npy') 
 
@@ -98,17 +91,21 @@ def read_from_sw96_CSDM(path):
     n_samples = features.shape[0]
     n_features = np.prod(features.shape[1:])  
 
-    features_flattened = features.reshape(n_samples, n_features)
 
-    features_normalized = np.abs(features_flattened) 
-    features_normalized = features_normalized / np.max(features_normalized)
+    X_mean = 4.8561368037430336e-11
+    X_var = 2.2572550317402957e-10
+    features_normalized = (features - X_mean)/X_var 
+    mean_matrix = np.mean(features, axis=1)
+    features_flattened = mean_matrix.reshape(n_samples, 441) 
+    print("flattened_matrix shape: ", features_flattened.shape)
+
 
     #Used this to create flattened_data.npz, not as good as h5
     #np.savez_compressed('flattened_data.npz', features=features_normalized, labels=labels)
 
     # Save the flattened features and labels to an HDF5 file, checkpoint for data before splitting
     with h5py.File('flattened_data.h5', 'w') as f:
-        f.create_dataset('features', data=features_normalized)
+        f.create_dataset('features', data=features_flattened)
         f.create_dataset('labels', data=labels)
 
     
@@ -117,6 +114,7 @@ def read_from_flattened_h5(filename, new_features_count):
         loaded_features = f['features'][:].astype(np.float32)  # used to be 64 but too large to process
         loaded_labels = f['labels'][:].astype(np.float32) #needs to be 32 because anything less wont be supported by svd
 
+    print("loaded_features data: ", loaded_features[0:50])
     print("Before PCA data shape:", loaded_features.shape)
     print("Before PCA Y_hat shape:", loaded_labels.shape)
 
@@ -135,21 +133,21 @@ def read_from_flattened_h5(filename, new_features_count):
     print("Before PCA Validation data shape after split:", X_val.shape)
     #print("Y_train: ", Y_train[:50])
 
-    num_components = new_features_count # this is a parameter fed into this function
+    # num_components = new_features_count # this is a parameter fed into this function
     
-    X_train_reduced, variance_retained = pca_svd(X_train, num_components)
-    X_val_reduced, _ = pca_svd(X_val, num_components)
+    # X_train_reduced, variance_retained = pca_svd(X_train, num_components)
+    # X_val_reduced, _ = pca_svd(X_val, num_components)
 
-    print(f"Variance retained: {variance_retained * 100:.2f}%")
+    # print(f"Variance retained: {variance_retained * 100:.2f}%")
 
-    print("Training data shape after reduction:", X_train_reduced.shape)
-    print("Validation data shape after reduction:", X_val_reduced.shape)
+    # print("Training data shape after reduction:", X_train_reduced.shape)
+    # print("Validation data shape after reduction:", X_val_reduced.shape)
 
     # Save the flattened features and labels to an HDF5 file
     with h5py.File('Training_and_Validation.h5', 'w') as f:
-        f.create_dataset('xTrainReduced', data=X_train_reduced)
+        f.create_dataset('xTrainReduced', data=X_train)
         f.create_dataset('yTrain', data=Y_train)
-        f.create_dataset('xValidationReduced', data=X_val_reduced)
+        f.create_dataset('xValidationReduced', data=X_val)
         f.create_dataset('yValidation', data=Y_val)
 
 
@@ -158,7 +156,7 @@ if __name__ == "__main__":
     # Both functions produce h5 in the local folder they are being run from
 
     #Warning: This functions is the first step but takes a long time to run, LARGE DATASET
-    read_from_sw96_CSDM('sw96_CSDM')
+    read_from_sw96_CSDM('sw96_CSDM/')
 
 
     # Reading from flattened_data.h5 after saving it off locally, still to large to upload to github
