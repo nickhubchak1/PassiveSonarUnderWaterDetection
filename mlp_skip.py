@@ -44,11 +44,8 @@ def SMAPE(Y, Yhat):
     return smape
 
 def accuracy(Y, Yhat):
-    """
-    Compute classification accuracy
-    """
-    predictions = (Yhat >= 0.5).astype(int)  # Convert probabilities to binary predictions
-    return np.mean(predictions == Y)
+    predictions = ((Y - Yhat) <= 2).astype(int)  
+    return np.mean(predictions)
 
 def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.00005, max_epochs=100000, tol=1e-10, patience=20):
     input_dim = X_train.shape[1]
@@ -196,9 +193,11 @@ def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.000
         if epoch % 100 == 0:
             train_smape = SMAPE(Y_train, X_fused)
             train_rmse = RMSE(Y_train, X_fused)
+            train_accuracy = accuracy(Y_train, X_fused)
             val_smape = SMAPE(Y_val, X_val_temp_fused)
             val_rmse = RMSE(Y_val, X_val_temp_fused)
-            print(f"Epoch {epoch}: Train Loss = {train_loss:.10f}, Val Loss = {val_loss:.10f}, Train SMAPE = {train_smape:.10f}, Train RMSE = {train_rmse:.10f}, Val SMAPE = {val_smape:.10f}, Val RMSE = {val_rmse:.10f}")
+            val_accuracy = accuracy(Y_val, X_val_temp_fused)
+            print(f"Epoch {epoch}: Train Loss = {train_loss:.10f}, Val Loss = {val_loss:.10f}, Train Acc = {train_accuracy:.10f}, Val Acc = {val_accuracy:.10f}, Train SMAPE = {train_smape:.10f}, Train RMSE = {train_rmse:.10f}, Val SMAPE = {val_smape:.10f}, Val RMSE = {val_rmse:.10f}")
         
         if abs(prev_mse - val_loss) < tol:
             print(f"Converged at epoch {epoch}")
@@ -217,7 +216,19 @@ def train_validate_with_skip(X_train, Y_train, X_val, Y_val, learning_rate=0.000
 
     toc = time.perf_counter()
     print(f"Training Time: {toc - tic:.2f} seconds")
-    return train_mse, val_mse, X_fused, X_val_temp_fused
+    return train_mse, val_mse, train_accuracy, val_accuracy, X_fused, X_val_temp_fused
+
+def plot_accuracy_curve(train_acc, val_acc):
+    plt.figure(figsize=(8,6))
+    plt.plot(train_acc, label="Train Accuracy")
+    plt.plot(val_acc, label="Val Accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title("Accuracy vs Epochs")
+    plt.legend()
+    plt.grid()
+    plt.savefig("Graphs/mlp_shallow_skip_Accuracy_Curve.png")
+    #plt.show()
 
 def plot_ground_truth_vs_prediction(Y_validation, prediction, title="Ground Truth vs Prediction for Validation"):
     plt.figure(figsize=(8, 6))
@@ -230,7 +241,8 @@ def plot_ground_truth_vs_prediction(Y_validation, prediction, title="Ground Trut
     plt.title(title)
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig("Graphs/mlp_shallow_skip_ground_Truth_vs_pred.png")
+    #plt.show()
 
 def plot_mse(train_mse, val_mse):
     plt.plot(train_mse, label="Train Squared Error")
@@ -238,8 +250,9 @@ def plot_mse(train_mse, val_mse):
     plt.xlabel("Epoch")
     plt.ylabel("Squared Error")
     plt.title("Squared Error vs Epoch")
+    plt.savefig("Graphs/mlp_shallow_skip_squared_error.png")
     plt.legend()
-    plt.show()
+    #plt.show()
     
 if __name__ == "__main__":
 
@@ -253,8 +266,10 @@ if __name__ == "__main__":
     print("Validation data shape after reduction:", X_val_reduced.shape)
 
     print("\n\nRunning shallow multiclass MLP with forward and back prop and SKIP RESIDUAL....\n_____________________________________")
-    train_mse, val_mse, X_train_fused, X_val_fused = train_validate_with_skip(X_train_reduced, Y_train, X_val_reduced, Y_val)
+    train_mse, val_mse, train_accuracy, val_accuracy, X_train_fused, X_val_fused = train_validate_with_skip(X_train_reduced, Y_train, X_val_reduced, Y_val)
     plot_mse(train_mse, val_mse)
     plot_ground_truth_vs_prediction(Y_train, X_train_fused)
     plot_ground_truth_vs_prediction(Y_val, X_val_fused)
+    plot_accuracy_curve(train_accuracy, val_accuracy)
+    plt.show()
 
