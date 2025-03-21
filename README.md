@@ -49,7 +49,7 @@ The first graph is an image of how the training vs validation performs for the s
 
 MLP Shallow Training VS Validation Squared Error w.r.t. Epochs       |  MLP Shallow Training VS Validation Accuracy  |  MLP Shallow ground truth vs prediction
 :-------------------------:|:-------------------------:|:-------------------------:
-![MLP Shallow Training VS Validation w.r.t. Epochs](Graphs/mlp_squared_error.png)  |  ![MLP Shallow Training VS Validation Accuracy](Graphs/DeepNet_Accuracy_Curve.png) |  ![MLP Shallow ground truth vs prediction](Graphs/mlp_ground_truth_prediction.png)
+![MLP Shallow Training VS Validation w.r.t. Epochs](Graphs/mlp_squared_error.png)  |  ![MLP Shallow Training VS Validation Accuracy](Graphs/mlp_Accuracy_Curve.png) |  ![MLP Shallow ground truth vs prediction](Graphs/mlp_ground_truth_prediction.png)
 
 We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **converged at epoch 2400: Train Loss = 1.0456665818, Val Loss = 10.6331876182, Train Acc = 0.9486666667, Val Acc = 0.7174440000, Train SMAPE = 0.1572280949, Train RMSE = 0.0186699097, Val SMAPE = 0.3876432678, Val RMSE = 0.0841950221**
 
@@ -66,7 +66,7 @@ One important thing to note with skip residuals in this example is convergance h
 
 MLP Shallow w. Skip Residual Squared Error Training VS Validation w.r.t. Epochs   |  MLP Shallow w. Skip Residual Accuracy Training vs Validation | MLP shallow w. Skip Residual Prediction vs Ground Truth
 :-------------------------:|:-------------------------:|:-------------------------:
-![MLP Shallow with Skip SE Training VS Validation w.r.t. Epochs](Graphs/mlp_shallow_skip_squared_error.png)  |  ![MLP Shallow with skip Residual Accuracy Training vs Validation](Graphs\DeepNet_Accuracy_Curve.png) |  ![MLP Shallow with skip Training VS Validation w.r.t. Epochs Zoomed in](Graphs/mlp_shallow_skip_ground_Truth_vs_pred.png)
+![MLP Shallow with Skip SE Training VS Validation w.r.t. Epochs](Graphs/mlp_shallow_skip_squared_error.png)  |  ![MLP Shallow with skip Residual Accuracy Training vs Validation](Graphs/mlp_shallow_skip_Accuracy_Curve.png) |  ![MLP Shallow with skip Training VS Validation w.r.t. Epochs Zoomed in](Graphs/mlp_shallow_skip_ground_Truth_vs_pred.png)
 
 We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **converged at epoch 4600: Train Loss = 2.7221100732, Val Loss = 11.2383338799, Train Acc = 0.8816666667, Val Acc = 0.6987817778, Train SMAPE = 0.2208306058, Train RMSE = 0.0301227493, Val SMAPE = 0.3947290627, Val RMSE = 0.0865576836**
 
