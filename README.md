@@ -8,7 +8,6 @@ The processed dataset is too large to store in github so we are storing it in a 
 Please download it and uncompress it and add it to the same folder as your **PassiveSonarUnderWaterDetection** cloned repo or forked branch lives locally. 
 
 
-
 ## Getting Started
 
 First install the requirements needed for this project (NOTE: The SW96_CSDM.zip is needed as well please download and uncompross to local git repo)
@@ -26,9 +25,7 @@ python flatten_sw96_CSDM.py
 
 You should now see a flattened_data.h5 in your local repo folder. If not check terminal for errors and try again.
 
-You should also see **Training_and_Validation.h5** which is our refined and preprocessed dataset after PCA to reduce the large feature set.
-
-So the dataset goes from roughly 300,000 features -> 1256 features with a **Variance retained: 99.66%**
+You should also see **Training_and_Validation.h5** which is our refined and preprocessed dataset after normalization using Z_scoring and flattening a 4500, 21, 21 -> 4500, 441
 
 Now we are ready to train ! Go ahead and run the mlp.py (This is just a basic MLP with shallow layers)
 
@@ -40,7 +37,7 @@ There are other flavors of the training and validation **mlp.py, mlp_skip.py, ml
 
 The **mlp_skip.py** is also a shallow architecture with skip risiduals allowing us to pass data past the first FullyConnected and TanH layers all the way to the second FullyConnected layer
 
-The **mlp_deep.py** is a 50 layer deep architecture with skip risiduals that has multiple FullyConnected and TanH layers with equal parts skip risiduals, our special concoction muhahahah
+The **mlp_deep.py** is a 18 layer deep architecture with skip risiduals that has multiple FullyConnected and TanH layers with equal parts skip residuals, our special concoction muhahahah
 
 All of these are runnable as long as the **Training_and_Validation.h5** data exists, otherwise please see the top of **Getting Started** 
 
@@ -50,16 +47,14 @@ Please note: runtimes may vary and some take longer to run, we added special opt
 
 The first graph is an image of how the training vs validation performs for the shallow mlp with NO skip risiduals, right side is just zoomed in:
 
-MLP Shallow Training VS Validation w.r.t. Epochs             |  MLP Shallow Training VS Validation w.r.t. Epochs Zoomed in
-:-------------------------:|:-------------------------:
-![MLP Shallow Training VS Validation w.r.t. Epochs](Graphs/MLP_Shallow_training_vs_validation.png)  |  ![MLP Shallow Training VS Validation w.r.t. Epochs Zoomed in](Graphs/MLP_Shallow_training_vs_validation_Zoomed.png)
+MLP Shallow Training VS Validation Squared Error w.r.t. Epochs       |  MLP Shallow Training VS Validation Accuracy  |  MLP Shallow ground truth vs prediction
+:-------------------------:|:-------------------------:|:-------------------------:
+![MLP Shallow Training VS Validation w.r.t. Epochs](Graphs/mlp_squared_error.png)  |  ![MLP Shallow Training VS Validation Accuracy](Graphs/DeepNet_Accuracy_Curve.png) |  ![MLP Shallow ground truth vs prediction](Graphs/mlp_ground_truth_prediction.png)
 
-We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **Validation Loss = 5.7398328336, SMAPE = 0.2900421048, RMSE = 0.0618592372**
+We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **converged at epoch 2400: Train Loss = 1.0456665818, Val Loss = 10.6331876182, Train Acc = 0.9486666667, Val Acc = 0.7174440000, Train SMAPE = 0.1572280949, Train RMSE = 0.0186699097, Val SMAPE = 0.3876432678, Val RMSE = 0.0841950221**
 
-Epoch 3000: Train Loss = 0.9672478040, Val Loss = 10.3759651500, Train SMAPE = 0.1500510150, Train RMSE = 0.0179562227, Val SMAPE = 0.3783200382, Val RMSE = 0.0831704280
-Converged at epoch 3012
 
-Running the mlp with a skip residual : 
+### Running the mlp with a skip residual : 
 
 ```bash
 python mlp_skip.py
@@ -69,13 +64,23 @@ We can see even better outputs in the following graph. The second graph is an im
 
 One important thing to note with skip residuals in this example is convergance happens much sooner before we would get convergance on epoch 1100  but now with skip residuals we converge around epoch 696
 
-MLP Shallow w. Skip Residual Training VS Validation w.r.t. Epochs             |  MLP Shallow w. Skip Residual Training VS Validation w.r.t. Epochs Zoomed in
+MLP Shallow w. Skip Residual Squared Error Training VS Validation w.r.t. Epochs   |  MLP Shallow w. Skip Residual Accuracy Training vs Validation | MLP shallow w. Skip Residual Prediction vs Ground Truth
+:-------------------------:|:-------------------------:|:-------------------------:
+![MLP Shallow with Skip SE Training VS Validation w.r.t. Epochs](Graphs/mlp_shallow_skip_squared_error.png)  |  ![MLP Shallow with skip Residual Accuracy Training vs Validation](Graphs\DeepNet_Accuracy_Curve.png) |  ![MLP Shallow with skip Training VS Validation w.r.t. Epochs Zoomed in](Graphs/mlp_shallow_skip_ground_Truth_vs_pred.png)
+
+We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **converged at epoch 4600: Train Loss = 2.7221100732, Val Loss = 11.2383338799, Train Acc = 0.8816666667, Val Acc = 0.6987817778, Train SMAPE = 0.2208306058, Train RMSE = 0.0301227493, Val SMAPE = 0.3947290627, Val RMSE = 0.0865576836**
+
+
+### Running the mlp Deep with a skip residual : 
+
+```bash
+python mlp_deep.py
+```
+
+We can see 
+
+MLP Deep w. Skip Residual Training VS Validation w.r.t. Epochs             |  MLP DEEP with Skip accuracy training vs validation
 :-------------------------:|:-------------------------:
-![MLP Shallow with Skip Training VS Validation w.r.t. Epochs](Graphs/MLP_Shallow_with_Skip_training_vs_validation.png)  |  ![MLP Shallow with skip Training VS Validation w.r.t. Epochs Zoomed in](Graphs/MLP_Shallow_with_Skip_training_vs_validation_Zoomed.png)
+![MLP DEEP with Skip Training VS Validation w.r.t. Epochs](Graphs\DeepNet_MSE.png)  |  ![MLP DEEP with skip accuracy training vs validation ](Graphs\DeepNet_Accuracy_Curve.png)
 
-We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **Validation Loss = 5.7540781178, SMAPE = 0.2991907063, RMSE = 0.0619359514**
-
-Epoch 4600: Train Loss = 1.4718474086, Val Loss = 10.6940970060, Train SMAPE = 0.1863646859, Train RMSE = 0.0221500746, Val SMAPE = 0.3940859529, Val RMSE = 0.0844358218
-Convergence detected. Early stopping initiated.
-Training Time: 627.61 seconds
-
+We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **Converged on epoch 280: Train Loss = 5.7057889098, Val Loss = 5.5517457376, Train Accuracy: 0.7527, Val Accuracy: 0.7487, Train SMAPE = 0.2935238322, Train RMSE = 0.0436112329, Val SMAPE = 0.2919700626, Val RMSE = 0.0608372733**
