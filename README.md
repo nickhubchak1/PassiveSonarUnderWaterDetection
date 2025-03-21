@@ -81,6 +81,6 @@ We can see
 
 MLP Deep w. Skip Residual Training VS Validation w.r.t. Epochs             |  MLP DEEP with Skip accuracy training vs validation
 :-------------------------:|:-------------------------:
-![MLP DEEP with Skip Training VS Validation w.r.t. Epochs](Graphs\DeepNet_MSE.png)  |  ![MLP DEEP with skip accuracy training vs validation ](Graphs\DeepNet_Accuracy_Curve.png)
+![MLP DEEP with Skip Training VS Validation w.r.t. Epochs](Graphs/DeepNet_MSE.png)  |  ![MLP DEEP with skip accuracy training vs validation ](Graphs/DeepNet_Accuracy_Curve.png)
 
 We achieve an Validation Loss, RMSE and SMAPE for Validation in the shallow architecture of: **Converged on epoch 280: Train Loss = 5.7057889098, Val Loss = 5.5517457376, Train Accuracy: 0.7527, Val Accuracy: 0.7487, Train SMAPE = 0.2935238322, Train RMSE = 0.0436112329, Val SMAPE = 0.2919700626, Val RMSE = 0.0608372733**
