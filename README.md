@@ -3,7 +3,7 @@
 We developed a model to track distances of the sea floor. 
 The processed dataset is too large to store in github so we are storing it in a shared drive that can handle its compressed size (12.5 Gb) here: 
 
-[SW96_CSDM.zip]() 
+[SW96_CSDM.zip]() (currently disabled for security purposes)
 
 Please download it and uncompress it and add it to the same folder as your **PassiveSonarUnderWaterDetection** cloned repo or forked branch lives locally. 
 
